@@ -1,97 +1,77 @@
 <?php
+
 namespace Workstation\FlutterwaveOjs;
 
+use PKP\core\Application;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use PKP\core\PKPHandler;
-use PKP\db\DAORegistry;
+use Psr\Log\LoggerInterface;
 
-class WebhookHandler extends PKPHandler
+class WebhookHandler
 {
-    private $secretKey;
+    private $plugin;
+    private $logger;
 
-    public function __construct()
+    public function __construct($plugin, LoggerInterface $logger)
     {
-        parent::__construct();
-        $this->secretKey = getenv('FLUTTERWAVE_SECRET_KEY');
+        $this->plugin = $plugin;
+        $this->logger = $logger;
     }
 
-    public function webhook($args, $request)
+    public function handleWebhook($params)
     {
-        // Read the incoming JSON payload
-        $input = @file_get_contents("php://input");
-        $event = json_decode($input, true);
-
-        // Log webhook payload (useful for debugging)
-        file_put_contents(__DIR__ . "/../logs/webhook.log", date('Y-m-d H:i:s') . " - " . json_encode($event) . "\n", FILE_APPEND);
-
-        // Validate payload
-        if (!$event || !isset($event['event'], $event['data'])) {
-            http_response_code(400);
-            exit("Invalid webhook payload");
+        $data = json_decode($params[0], true);
+        
+        $txRef = $data['tx_ref'] ?? null;
+        $status = $data['status'] ?? null;
+        $amount = $data['amount'] ?? null;
+        $currency = $data['currency'] ?? null;
+        
+        if (!$txRef || !$status) {
+            $this->logger->error('Invalid webhook data', ['data' => $data]);
+            return ['error' => 'Invalid data received'];
         }
 
-        // Check if it's a Flutterwave transaction event
-        if ($event['event'] !== "charge.completed") {
-            http_response_code(200);
-            exit("Ignoring non-payment event");
+        // You can add validation checks here to verify the status of the payment
+        if ($status === 'successful') {
+            $this->logger->info('Payment confirmed successfully', ['tx_ref' => $txRef]);
+            // You can implement further actions (e.g., updating order status in OJS)
+            return ['status' => 'success', 'message' => 'Payment processed successfully'];
+                } else {
+            $this->logger->warning('Payment failed or pending', ['tx_ref' => $txRef, 'status' => $status]);
+            return ['status' => 'failed', 'message' => 'Payment failed or pending'];
         }
-
-        $transactionId = $event['data']['id'];
-        $status = $event['data']['status'];
-        $orderRef = $event['data']['tx_ref']; // Reference OJS uses
-        $amount = $event['data']['amount'];
-        $currency = $event['data']['currency'];
-
-        // Validate transaction status
-        if ($status !== "successful") {
-            http_response_code(400);
-            exit("Payment failed or incomplete");
-        }
-
-        // Verify transaction with Flutterwave API
-        if (!$this->verifyTransaction($transactionId)) {
-            http_response_code(400);
-            exit("Transaction verification failed");
-        }
-
-        // Mark the payment as completed in OJS
-        $this->updatePaymentStatus($orderRef, $amount, $currency);
-
-        http_response_code(200);
-        exit("Webhook processed successfully");
     }
 
-    private function verifyTransaction($transactionId)
+    public function verifyPayment($txRef)
     {
+        $client = new Client();
+        $contextId = Application::get()->getRequest()->getContext()->getId();
+        $secretKey = $this->plugin->getSetting($contextId, 'secretKey');
+        $url = $this->plugin->getSetting($contextId, 'liveMode')
+            ? "https://api.flutterwave.com/v3/charges?tx_ref=$txRef"
+            : "https://api.flutterwave.com/v3/charges?tx_ref=$txRef"; // Use test URL for testing
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $secretKey,
+            'Content-Type'  => 'application/json',
+        ];
+
         try {
-            $client = new Client();
-            $response = $client->request("GET", "https://api.flutterwave.com/v3/transactions/{$transactionId}/verify", [
-                "headers" => [
-                    "Authorization" => "Bearer " . $this->secretKey,
-                    "Content-Type" => "application/json"
-                ]
-            ]);
+            $response = $client->get($url, ['headers' => $headers]);
 
-            $data = json_decode($response->getBody(), true);
-            return isset($data["status"]) && $data["status"] === "success";
-        } catch (RequestException $e) {
-            return false;
+            $responseBody = json_decode($response->getBody()->getContents(), true);
+
+            if (isset($responseBody['status']) && $responseBody['status'] === 'success') {
+                $this->logger->info('Payment verified successfully', ['tx_ref' => $txRef, 'response' => $responseBody]);
+                return $responseBody;
+            }
+
+            $this->logger->error('Payment verification failed', ['tx_ref' => $txRef, 'response' => $responseBody]);
+            return ['error' => 'Payment verification failed', 'details' => $responseBody];
+
+        } catch (\Exception $e) {
+            $this->logger->error('Error verifying payment', ['tx_ref' => $txRef, 'exception' => $e->getMessage()]);
+            return ['error' => $e->getMessage()];
         }
-    }
-
-    private function updatePaymentStatus($orderRef, $amount, $currency)
-    {
-        // Retrieve OJS payment DAO
-        $dao = DAORegistry::getDAO('OJSPluginPaymentDAO'); // Ensure this DAO exists
-        if (!$dao) {
-            error_log("OJS Payment DAO not found!");
-            return;
-        }
-
-        // Mark the order as paid
-        $dao->markOrderPaid($orderRef, $amount, $currency);
-
-        error_log("Payment updated successfully for Order: $orderRef, Amount: $amount $currency");
     }
 }
