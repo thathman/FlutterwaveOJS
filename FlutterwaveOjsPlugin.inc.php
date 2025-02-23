@@ -28,7 +28,7 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
      */
     public function getName()
     {
-        return 'flutterwaveOJS'; // Must match folder name
+        return 'flutterwaveOJS';
     }
 
     /**
@@ -119,6 +119,38 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
             'value' => (bool) $this->getSetting($context->getId(), 'liveMode'),
             'groupId' => 'flutterwave',
         ]));
+
+        return;
+    }
+
+    /**
+     * Get the payment form for users to complete transactions.
+     */
+    public function getPaymentForm($context, $queuedPayment)
+    {
+        $contextId = $context ? $context->getId() : CONTEXT_ID_NONE;
+
+        $publicKey = $this->getSetting($contextId, 'publicKey');
+        $secretKey = $this->getSetting($contextId, 'secretKey');
+        $liveMode = $this->getSetting($contextId, 'liveMode');
+
+        $amount = $queuedPayment->getAmount();
+        $currency = $queuedPayment->getAmountCurrencyCode();
+        $transactionId = $queuedPayment->getQueuedPaymentId();
+        $callbackUrl = Application::get()->getRequest()->url(null, 'payment', 'flutterwave', 'return');
+
+        $apiEndpoint = $liveMode ? "https://api.flutterwave.com/v3/payments" : "https://api.flutterwave.com/v3/payments";
+
+        return '
+            <form action="' . $apiEndpoint . '" method="POST">
+                <input type="hidden" name="public_key" value="' . htmlspecialchars($publicKey) . '">
+                <input type="hidden" name="tx_ref" value="' . htmlspecialchars($transactionId) . '">
+                <input type="hidden" name="amount" value="' . htmlspecialchars($amount) . '">
+                <input type="hidden" name="currency" value="' . htmlspecialchars($currency) . '">
+                <input type="hidden" name="redirect_url" value="' . htmlspecialchars($callbackUrl) . '">
+                <button type="submit">Pay with Flutterwave</button>
+            </form>
+        ';
     }
 
     /**
@@ -139,37 +171,53 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
 
         $contextId = $context->getId();
 
+        // Save settings
         $this->updateSetting($contextId, 'publicKey', $request->getUserVar('publicKey'));
         $this->updateSetting($contextId, 'secretKey', $request->getUserVar('secretKey'));
         $this->updateSetting($contextId, 'encryptionKey', $request->getUserVar('encryptionKey'));
         $this->updateSetting($contextId, 'liveMode', $request->getUserVar('liveMode') ? 1 : 0);
 
-        return $this->validateApiKeys($contextId);
+        return true;
     }
 
-    public function validateApiKeys($contextId)
+    /**
+     * Handle payment processing and webhooks.
+     */
+    public function handle($args, $request)
     {
-        $publicKey = $this->getSetting($contextId, 'publicKey');
-        $secretKey = $this->getSetting($contextId, 'secretKey');
+        $context = $request->getContext();
+        $operation = isset($args[0]) ? $args[0] : null;
 
-        $url = "https://api.flutterwave.com/v3/banks/NG";
-        $headers = [
-            "Authorization: Bearer " . $secretKey,
-            "Content-Type: application/json"
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode == 200) {
-            return new \PKP\core\JSONMessage(true, "API Keys are valid!");
-        } else {
-            return new \PKP\core\JSONMessage(false, "Invalid API Keys. Please check your credentials.");
+        if ($operation === 'webhook') {
+            return $this->handleWebhook($request);
         }
+
+        $queuedPaymentId = $request->getUserVar('queuedPaymentId');
+        if (!$queuedPaymentId) {
+            return new \PKP\core\JSONMessage(false, __('plugins.paymethod.flutterwave.error.noQueuedPaymentId'));
+        }
+
+        $paymentManager = Application::getPaymentManager($context);
+        $queuedPayment = $paymentManager->getQueuedPayment($queuedPaymentId);
+
+        if (!$queuedPayment) {
+            return new \PKP\core\JSONMessage(false, __('plugins.paymethod.flutterwave.error.invalidPayment'));
+        }
+
+        return $this->getPaymentForm($context, $queuedPayment);
+    }
+
+    /**
+     * Handle Flutterwave webhook requests.
+     */
+    private function handleWebhook($request)
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['status']) || $data['status'] !== 'successful') {
+            return json_encode(['status' => 'error', 'message' => 'Invalid webhook payload']);
+        }
+
+        return json_encode(['status' => 'success', 'message' => 'Webhook received successfully']);
     }
 }
