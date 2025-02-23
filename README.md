@@ -1,5 +1,3 @@
-Here’s the **styled README.md** file with proper Markdown formatting:
-
 ```markdown
 # FlutterwaveOJS Plugin (Work In Progress)
 
