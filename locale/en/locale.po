@@ -1,6 +1,14 @@
 msgid ""
 msgstr ""
+"Project-Id-Version: FlutterwaveOJS Plugin\n"
+"POT-Creation-Date: 2025-02-23\n"
+"PO-Revision-Date: 2025-02-23\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 msgid "plugins.paymethod.flutterwave.displayName"
 msgstr "Flutterwave Payment Plugin"
@@ -20,5 +28,38 @@ msgstr "Flutterwave Secret Key"
 msgid "plugins.paymethod.flutterwave.liveMode"
 msgstr "Enable Live Mode"
 
+msgid "plugins.paymethod.flutterwave.sandboxMode"
+msgstr "Sandbox Mode"
+
 msgid "plugins.paymethod.flutterwave.instructions"
 msgstr "Instructions for making payments using Flutterwave."
+
+msgid "plugins.paymethod.flutterwave.error"
+msgstr "A transaction error occurred with Flutterwave. Please contact the journal manager for details."
+
+msgid "plugins.paymethod.flutterwave.currency"
+msgstr "Select Currency"
+
+msgid "plugins.paymethod.flutterwave.paymentProcessing"
+msgstr "Processing Payment with Flutterwave..."
+
+msgid "plugins.paymethod.flutterwave.success"
+msgstr "Payment completed successfully!"
+
+msgid "plugins.paymethod.flutterwave.failure"
+msgstr "Payment failed. Please try again or contact support."
+
+msgid "plugins.paymethod.flutterwave.return"
+msgstr "Return to Payment Page"
+
+msgid "plugins.paymethod.flutterwave.settings.saved"
+msgstr "Flutterwave settings saved successfully."
+
+msgid "plugins.paymethod.flutterwave.transactionId"
+msgstr "Transaction ID"
+
+msgid "plugins.paymethod.flutterwave.amount"
+msgstr "Amount"
+
+msgid "plugins.paymethod.flutterwave.redirecting"
+msgstr "Redirecting to Flutterwave for payment..."
