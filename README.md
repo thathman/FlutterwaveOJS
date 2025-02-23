@@ -71,5 +71,3 @@ You can view and contribute to the plugin here:
 ## Contact
 
 For inquiries or collaboration, feel free to contact me at [hello@hendrix.com.ng](mailto:hello@hendrix.com.ng).
-
-Would you like to update the file directly with these changes?
