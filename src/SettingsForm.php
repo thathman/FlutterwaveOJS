@@ -3,8 +3,7 @@
 namespace Workstation\FlutterwaveOjs;
 
 use PKP\form\Form;
-use PKP\context\Context;
-use PKP\core\DAORegistry;
+use PKP\core\Application;
 
 class SettingsForm extends Form
 {
@@ -13,12 +12,11 @@ class SettingsForm extends Form
     public function __construct($plugin)
     {
         parent::__construct($plugin->getTemplateResource('settingsForm.tpl'));
-
         $this->plugin = $plugin;
-        
+
         // Add validation checks
-        $this->addCheck(new \PKP\form\validation\FormValidator($this, 'publicKey', 'required', 'Public Key is required.'));
-        $this->addCheck(new \PKP\form\validation\FormValidator($this, 'secretKey', 'required', 'Secret Key is required.'));
+        $this->addCheck(new \PKP\form\validation\FormValidator($this, 'publicKey', 'required', 'plugins.paymethod.flutterwave.error.publicKeyRequired'));
+        $this->addCheck(new \PKP\form\validation\FormValidator($this, 'secretKey', 'required', 'plugins.paymethod.flutterwave.error.secretKeyRequired'));
     }
 
     public function initData()
@@ -38,6 +36,7 @@ class SettingsForm extends Form
     {
         $contextId = \Application::get()->getRequest()->getContext()->getId();
 
+        // Save settings to the plugin
         $this->plugin->updateSetting($contextId, 'publicKey', $this->getData('publicKey'));
         $this->plugin->updateSetting($contextId, 'secretKey', $this->getData('secretKey'));
         $this->plugin->updateSetting($contextId, 'liveMode', $this->getData('liveMode'));
