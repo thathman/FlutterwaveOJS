@@ -14,7 +14,7 @@ The **FlutterwaveOJS Plugin** integrates **Flutterwave** with **Open Journal Sys
  2.  **Install Composer Dependencies**:
    - Navigate to the plugin directory and run:
    ```bash
-   composer install   ```
+   composer install
 
 3. **Upload to your OJS installation**:
    - Copy the contents of the plugin to the `plugins/paymethod` directory of your OJS installation.
