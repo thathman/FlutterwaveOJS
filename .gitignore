@@ -1,18 +1,26 @@
+# Ignore log files
 *.log
+
+# Ignore cache and temporary files
 *.cache
 *.tmp
 
-vendor/
-composer.lock
+# Ignore vendor folder (Composer dependencies)
+/vendor/
 
-node_modules/
-package-lock.json
-yarn.lock
+# Ignore node_modules and related files
+/node_modules/
+/package-lock.json
+/yarn.lock
 
-dist/
-build/
+# Ignore build and distribution directories
+/dist/
+/build/
 
-cache/
-public/
-files/
+# Ignore cache, public, and files folders
+/cache/
+/public/
+/files/
+
+# Ignore macOS system files
 .DS_Store
