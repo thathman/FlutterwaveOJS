@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<version>
+    <application>ojs2</application>
+    <type>paymethod</type>  <!-- Corrected type -->
+    <category>paymethod</category>  <!-- Explicitly define the category -->
+    <name>flutterwaveOJS</name>
+    <version>1.0.0</version>
+    <release>2025-02-23</release>
+    <status>stable</status>
+    <compatibility>
+        <app name="ojs" min_version="3.3.0" max_version="3.4.0"/>
+    </compatibility>
+    <description>Integrates Flutterwave with OJS to accept APC, subscription, and donation payments.</description>
+    <license>MIT</license>
+</version>

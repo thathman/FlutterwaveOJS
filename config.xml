@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+    <name>flutterwaveOJS</name>
+    <description>Integrates Flutterwave with OJS for APC, subscription, and donation payments.</description>
+    <version>1.0.0</version>
+    <author>Hendrix Nwaokolo</author>
+    <email>hello@hendrix.com.ng</email>
+    <release>2025-02-23</release>
+    <category>paymethod</category>
+    <lazy-load>true</lazy-load>
+    <locale>en</locale>
+</plugin>

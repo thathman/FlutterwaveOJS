@@ -1,0 +1,24 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "plugins.paymethod.flutterwave.displayName"
+msgstr "Flutterwave Payment Plugin"
+
+msgid "plugins.paymethod.flutterwave.description"
+msgstr "Integrates Flutterwave with OJS for APC, subscription, and donation payments."
+
+msgid "plugins.paymethod.flutterwave.settings"
+msgstr "Flutterwave Settings"
+
+msgid "plugins.paymethod.flutterwave.publicKey"
+msgstr "Flutterwave Public Key"
+
+msgid "plugins.paymethod.flutterwave.secretKey"
+msgstr "Flutterwave Secret Key"
+
+msgid "plugins.paymethod.flutterwave.liveMode"
+msgstr "Enable Live Mode"
+
+msgid "plugins.paymethod.flutterwave.instructions"
+msgstr "Instructions for making payments using Flutterwave."
