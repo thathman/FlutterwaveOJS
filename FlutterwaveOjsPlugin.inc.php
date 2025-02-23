@@ -17,6 +17,9 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
         // Load locale data
         $this->addLocaleData();
 
+        // Hook to add settings to OJS payment settings form
+        HookRegistry::register('Form::config::before', [$this, 'addSettings']);
+
         return true;
     }
 
@@ -72,6 +75,49 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
     }
 
     /**
+     * Hook to add settings to OJS Payments form.
+     */
+    public function addSettings($hookName, $form)
+    {
+        import('lib.pkp.classes.components.forms.context.PKPPaymentSettingsForm');
+        if ($form->id !== FORM_PAYMENT_SETTINGS) {
+            return;
+        }
+
+        $context = Application::get()->getRequest()->getContext();
+        if (!$context) {
+            return;
+        }
+
+        $form->addGroup([
+            'id' => 'flutterwave',
+            'label' => __('plugins.paymethod.flutterwave.displayName'),
+            'showWhen' => 'paymentsEnabled',
+        ])
+        ->addField(new \PKP\components\forms\FieldText('publicKey', [
+            'label' => __('plugins.paymethod.flutterwave.publicKey'),
+            'value' => $this->getSetting($context->getId(), 'publicKey'),
+            'groupId' => 'flutterwave',
+        ]))
+        ->addField(new \PKP\components\forms\FieldText('secretKey', [
+            'label' => __('plugins.paymethod.flutterwave.secretKey'),
+            'value' => $this->getSetting($context->getId(), 'secretKey'),
+            'groupId' => 'flutterwave',
+        ]))
+        ->addField(new \PKP\components\forms\FieldOptions('liveMode', [
+            'label' => __('plugins.paymethod.flutterwave.liveMode'),
+            'options' => [
+                ['value' => 1, 'label' => __('plugins.paymethod.flutterwave.liveMode')],
+                ['value' => 0, 'label' => __('plugins.paymethod.flutterwave.sandboxMode')],
+            ],
+            'value' => (bool) $this->getSetting($context->getId(), 'liveMode'),
+            'groupId' => 'flutterwave',
+        ]));
+
+        return;
+    }
+
+    /**
      * Get the payment form for users to complete transactions.
      */
     public function getPaymentForm($queuedPayment, $request)
@@ -103,14 +149,14 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
     }
 
     /**
-     * Save plugin settings (Corrected method signature).
+     * Save plugin settings.
      */
     public function saveSettings(string $hookName, array $args)
     {
         // Extract request from arguments
         $request = $args[0];
 
-        if (!$request instanceof PKPRequest) {
+        if (!$request instanceof \PKP\core\PKPRequest) {
             return false;
         }
 
@@ -138,14 +184,14 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
         $queuedPaymentId = $request->getUserVar('queuedPaymentId');
 
         if (!$queuedPaymentId) {
-            return new JSONMessage(false, __('plugins.paymethod.flutterwave.error.noQueuedPaymentId'));
+            return new \PKP\core\JSONMessage(false, __('plugins.paymethod.flutterwave.error.noQueuedPaymentId'));
         }
 
-        $paymentManager = Application::getPaymentManager($context);
+        $paymentManager = \Application::getPaymentManager($context);
         $queuedPayment = $paymentManager->getQueuedPayment($queuedPaymentId);
 
         if (!$queuedPayment) {
-            return new JSONMessage(false, __('plugins.paymethod.flutterwave.error.invalidPayment'));
+            return new \PKP\core\JSONMessage(false, __('plugins.paymethod.flutterwave.error.invalidPayment'));
         }
 
         return $this->getPaymentForm($queuedPayment, $request);
