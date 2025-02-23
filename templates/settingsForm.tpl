@@ -1,5 +1,5 @@
 {strip}
-<form id="flutterwaveSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_COMPONENT component="plugins.paymethod.flutterwaveOJS.FlutterwaveOjsPlugin" op="manage" action="saveSettings"}">
+<form id="flutterwaveSettingsForm" class="pkp_form" method="post" action="{url router=$smarty.const.ROUTE_COMPONENT component='plugins.paymethod.flutterwaveOJS.FlutterwaveOjsPlugin' op='manage' action='saveSettings'}">
     {csrf}
     
     <div class="pkp_form_section">
