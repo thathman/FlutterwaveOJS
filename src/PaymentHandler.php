@@ -3,8 +3,8 @@
 namespace Workstation\FlutterwaveOjs;
 
 use GuzzleHttp\Client;
-use PKP\plugins\HookRegistry;
 use PKP\core\Application;
+use Psr\Log\LoggerInterface;
 
 class PaymentHandler
 {
@@ -12,10 +12,12 @@ class PaymentHandler
     private $publicKey;
     private $secretKey;
     private $liveMode;
+    private $logger;
 
-    public function __construct($plugin)
+    public function __construct($plugin, LoggerInterface $logger)
     {
         $this->plugin = $plugin;
+        $this->logger = $logger;
         $contextId = Application::get()->getRequest()->getContext()->getId();
 
         $this->publicKey = $this->plugin->getSetting($contextId, 'publicKey');
@@ -23,28 +25,12 @@ class PaymentHandler
         $this->liveMode = $this->plugin->getSetting($contextId, 'liveMode');
     }
 
-    public function register($category, $path, $mainContextId)
-    {
-        HookRegistry::register('LoadHandler', function ($hookName, $params) {
-            $page = $params[0];
-            $op = $params[1];
-
-            if ($page === 'flutterwave' && $op === 'webhook') {
-                define('HANDLER_CLASS', WebhookHandler::class);
-                return true;
-            }
-            return false;
-        });
-
-        return parent::register($category, $path, $mainContextId);
-    }
-
     public function processPayment($amount, $currency, $email, $txRef)
     {
         $client = new Client();
-        $url = $this->liveMode 
-            ? "https://api.flutterwave.com/v3/payments" 
-            : "https://api.flutterwave.com/v3/payments";
+        $url = $this->liveMode
+            ? "https://api.flutterwave.com/v3/charges?tx_ref=$txRef"
+            : "https://api.flutterwave.com/v3/charges?tx_ref=$txRef"; // Update with actual test URL if needed
 
         $headers = [
             'Authorization' => 'Bearer ' . $this->secretKey,
@@ -61,13 +47,25 @@ class PaymentHandler
         ];
 
         try {
+            $this->logger->info('Sending payment request to Flutterwave', ['tx_ref' => $txRef, 'amount' => $amount, 'currency' => $currency]);
+
             $response = $client->post($url, [
                 'headers' => $headers,
                 'json'    => $body,
             ]);
 
-            return json_decode($response->getBody()->getContents(), true);
+            $responseBody = json_decode($response->getBody()->getContents(), true);
+
+            if (isset($responseBody['status']) && $responseBody['status'] === 'success') {
+                $this->logger->info('Payment successful', ['tx_ref' => $txRef, 'response' => $responseBody]);
+                return $responseBody;
+            }
+
+            $this->logger->error('Payment failed', ['tx_ref' => $txRef, 'response' => $responseBody]);
+            return ['error' => 'Payment failed', 'details' => $responseBody];
+
         } catch (\Exception $e) {
+            $this->logger->error('Error processing payment', ['tx_ref' => $txRef, 'exception' => $e->getMessage()]);
             return ['error' => $e->getMessage()];
         }
     }
