@@ -17,7 +17,7 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
         // Load locale data
         $this->addLocaleData();
 
-        // Hook to add settings to OJS payment settings form
+        // Hook to inject settings into Payment Settings
         HookRegistry::register('Form::config::before', [$this, 'addSettings']);
 
         return true;
@@ -48,31 +48,13 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
     }
 
     /**
-     * Get the payment method name.
-     */
-    public function getPaymentMethodName()
-    {
-        return 'Flutterwave';
-    }
-
-    /**
      * Check if the plugin is configured.
      */
     public function isConfigured($contextId)
     {
-        $publicKey = $this->getSetting($contextId, 'publicKey');
-        $secretKey = $this->getSetting($contextId, 'secretKey');
-        $encryptionKey = $this->getSetting($contextId, 'encryptionKey');
-
-        return !empty($publicKey) && !empty($secretKey) && !empty($encryptionKey);
-    }
-
-    /**
-     * Get the template path.
-     */
-    public function getTemplatePath($inCore = false)
-    {
-        return $this->getPluginPath() . '/templates/';
+        return !empty($this->getSetting($contextId, 'publicKey')) &&
+               !empty($this->getSetting($contextId, 'secretKey')) &&
+               !empty($this->getSetting($contextId, 'encryptionKey'));
     }
 
     /**
@@ -90,6 +72,8 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
             return;
         }
 
+        $contextId = $context->getId();
+
         $form->addGroup([
             'id' => 'flutterwave',
             'label' => __('plugins.paymethod.flutterwave.displayName'),
@@ -97,60 +81,29 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
         ])
         ->addField(new \PKP\components\forms\FieldText('publicKey', [
             'label' => __('plugins.paymethod.flutterwave.publicKey'),
-            'value' => $this->getSetting($context->getId(), 'publicKey'),
+            'value' => $this->getSetting($contextId, 'publicKey') ?? '',
             'groupId' => 'flutterwave',
         ]))
         ->addField(new \PKP\components\forms\FieldText('secretKey', [
             'label' => __('plugins.paymethod.flutterwave.secretKey'),
-            'value' => $this->getSetting($context->getId(), 'secretKey'),
+            'value' => $this->getSetting($contextId, 'secretKey') ?? '',
             'groupId' => 'flutterwave',
         ]))
         ->addField(new \PKP\components\forms\FieldText('encryptionKey', [
             'label' => __('plugins.paymethod.flutterwave.encryptionKey'),
-            'value' => $this->getSetting($context->getId(), 'encryptionKey'),
+            'value' => $this->getSetting($contextId, 'encryptionKey') ?? '',
             'groupId' => 'flutterwave',
         ]))
-        ->addField(new \PKP\components\forms\FieldOptions('liveMode', [
-            'label' => __('plugins.paymethod.flutterwave.liveMode'),
+        ->addField(new \PKP\components\forms\FieldOptions('testMode', [
+            'label' => __('plugins.paymethod.flutterwave.enableTestMode'),
             'options' => [
-                ['value' => 1, 'label' => __('plugins.paymethod.flutterwave.liveMode')],
-                ['value' => 0, 'label' => __('plugins.paymethod.flutterwave.sandboxMode')],
+                ['value' => 1, 'label' => __('common.enable')],
             ],
-            'value' => (bool) $this->getSetting($context->getId(), 'liveMode'),
+            'value' => (bool) $this->getSetting($contextId, 'testMode'),
             'groupId' => 'flutterwave',
         ]));
 
         return;
-    }
-
-    /**
-     * Get the payment form for users to complete transactions.
-     */
-    public function getPaymentForm($context, $queuedPayment)
-    {
-        $contextId = $context ? $context->getId() : CONTEXT_ID_NONE;
-
-        $publicKey = $this->getSetting($contextId, 'publicKey');
-        $secretKey = $this->getSetting($contextId, 'secretKey');
-        $liveMode = $this->getSetting($contextId, 'liveMode');
-
-        $amount = $queuedPayment->getAmount();
-        $currency = $queuedPayment->getAmountCurrencyCode();
-        $transactionId = $queuedPayment->getQueuedPaymentId();
-        $callbackUrl = Application::get()->getRequest()->url(null, 'payment', 'flutterwave', 'return');
-
-        $apiEndpoint = $liveMode ? "https://api.flutterwave.com/v3/payments" : "https://api.flutterwave.com/v3/payments";
-
-        return '
-            <form action="' . $apiEndpoint . '" method="POST">
-                <input type="hidden" name="public_key" value="' . htmlspecialchars($publicKey) . '">
-                <input type="hidden" name="tx_ref" value="' . htmlspecialchars($transactionId) . '">
-                <input type="hidden" name="amount" value="' . htmlspecialchars($amount) . '">
-                <input type="hidden" name="currency" value="' . htmlspecialchars($currency) . '">
-                <input type="hidden" name="redirect_url" value="' . htmlspecialchars($callbackUrl) . '">
-                <button type="submit">Pay with Flutterwave</button>
-            </form>
-        ';
     }
 
     /**
@@ -165,59 +118,57 @@ class FlutterwaveOjsPlugin extends PaymethodPlugin
         }
 
         $context = $request->getContext();
-        if (!$context) {
+        if (!$context || !method_exists($context, 'getId')) {
             return false;
         }
 
-        $contextId = $context->getId();
+        $contextId = (int) $context->getId();
 
-        // Save settings
-        $this->updateSetting($contextId, 'publicKey', $request->getUserVar('publicKey'));
-        $this->updateSetting($contextId, 'secretKey', $request->getUserVar('secretKey'));
-        $this->updateSetting($contextId, 'encryptionKey', $request->getUserVar('encryptionKey'));
-        $this->updateSetting($contextId, 'liveMode', $request->getUserVar('liveMode') ? 1 : 0);
+        // Get input data
+        $publicKey = $request->getUserVar('publicKey');
+        $secretKey = $request->getUserVar('secretKey');
+        $encryptionKey = $request->getUserVar('encryptionKey');
+        $testMode = (bool) $request->getUserVar('testMode');
+
+        // Save settings properly
+        $pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
+        $pluginSettingsDao->updateSetting($contextId, 'publicKey', $publicKey, 'string');
+        $pluginSettingsDao->updateSetting($contextId, 'secretKey', $secretKey, 'string');
+        $pluginSettingsDao->updateSetting($contextId, 'encryptionKey', $encryptionKey, 'string');
+        $pluginSettingsDao->updateSetting($contextId, 'testMode', $testMode, 'bool');
 
         return true;
     }
 
     /**
-     * Handle payment processing and webhooks.
+     * Get the payment form for users to complete transactions.
      */
-    public function handle($args, $request)
+    public function getPaymentForm($context, $queuedPayment)
     {
-        $context = $request->getContext();
-        $operation = isset($args[0]) ? $args[0] : null;
+        $contextId = $context->getId();
+        $publicKey = $this->getSetting($contextId, 'publicKey');
+        $amount = $queuedPayment->getAmount();
+        $currency = $queuedPayment->getAmountCurrencyCode();
+        $transactionId = $queuedPayment->getQueuedPaymentId();
+        $callbackUrl = $context->getUrl() . '/payment/flutterwave/return';
 
-        if ($operation === 'webhook') {
-            return $this->handleWebhook($request);
-        }
-
-        $queuedPaymentId = $request->getUserVar('queuedPaymentId');
-        if (!$queuedPaymentId) {
-            return new \PKP\core\JSONMessage(false, __('plugins.paymethod.flutterwave.error.noQueuedPaymentId'));
-        }
-
-        $paymentManager = Application::getPaymentManager($context);
-        $queuedPayment = $paymentManager->getQueuedPayment($queuedPaymentId);
-
-        if (!$queuedPayment) {
-            return new \PKP\core\JSONMessage(false, __('plugins.paymethod.flutterwave.error.invalidPayment'));
-        }
-
-        return $this->getPaymentForm($context, $queuedPayment);
+        return '
+            <form action="https://api.flutterwave.com/v3/payments" method="POST">
+                <input type="hidden" name="public_key" value="' . htmlspecialchars($publicKey) . '">
+                <input type="hidden" name="amount" value="' . htmlspecialchars($amount) . '">
+                <input type="hidden" name="currency" value="' . htmlspecialchars($currency) . '">
+                <input type="hidden" name="tx_ref" value="' . htmlspecialchars($transactionId) . '">
+                <input type="hidden" name="redirect_url" value="' . htmlspecialchars($callbackUrl) . '">
+                <button type="submit">Pay with Flutterwave</button>
+            </form>
+        ';
     }
 
     /**
-     * Handle Flutterwave webhook requests.
+     * Handle payment requests.
      */
-    private function handleWebhook($request)
+    public function handle($args, $request)
     {
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (!$data || !isset($data['status']) || $data['status'] !== 'successful') {
-            return json_encode(['status' => 'error', 'message' => 'Invalid webhook payload']);
-        }
-
-        return json_encode(['status' => 'success', 'message' => 'Webhook received successfully']);
+        return null; // Placeholder function for proper class implementation
     }
 }

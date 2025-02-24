@@ -29,44 +29,22 @@ class SettingsForm extends Form
         $this->setData('publicKey', $this->plugin->getSetting($contextId, 'publicKey'));
         $this->setData('secretKey', $this->plugin->getSetting($contextId, 'secretKey'));
         $this->setData('encryptionKey', $this->plugin->getSetting($contextId, 'encryptionKey'));
-        $this->setData('liveMode', $this->plugin->getSetting($contextId, 'liveMode'));
+        $this->setData('testMode', $this->plugin->getSetting($contextId, 'testMode'));
     }
 
     public function readInputData()
     {
-        $this->readUserVars(['publicKey', 'secretKey', 'encryptionKey', 'liveMode']);
+        $this->readUserVars(['publicKey', 'secretKey', 'encryptionKey', 'testMode']);
     }
 
     public function execute(...$functionArgs)
     {
         $contextId = Application::get()->getRequest()->getContext()->getId();
 
-        $this->plugin->updateSetting($contextId, 'publicKey', $this->getData('publicKey'));
-        $this->plugin->updateSetting($contextId, 'secretKey', $this->getData('secretKey'));
-        $this->plugin->updateSetting($contextId, 'encryptionKey', $this->getData('encryptionKey'));
-        $this->plugin->updateSetting($contextId, 'liveMode', $this->getData('liveMode'));
-
-        // Validate API keys before saving
-        $this->validateApiKeys($contextId);
-    }
-
-    private function validateApiKeys($contextId)
-    {
-        $publicKey = $this->plugin->getSetting($contextId, 'publicKey');
-        $secretKey = $this->plugin->getSetting($contextId, 'secretKey');
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.flutterwave.com/v3/banks/NG");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer $secretKey"
-        ]);
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        $decodedResponse = json_decode($response, true);
-        if (!isset($decodedResponse['status']) || $decodedResponse['status'] !== 'success') {
-            throw new \Exception(__('plugins.paymethod.flutterwave.error.invalidApiKeys'));
-        }
+        $pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
+        $pluginSettingsDao->updateSetting($contextId, 'publicKey', $this->getData('publicKey'), 'string');
+        $pluginSettingsDao->updateSetting($contextId, 'secretKey', $this->getData('secretKey'), 'string');
+        $pluginSettingsDao->updateSetting($contextId, 'encryptionKey', $this->getData('encryptionKey'), 'string');
+        $pluginSettingsDao->updateSetting($contextId, 'testMode', (bool) $this->getData('testMode'), 'bool');
     }
 }

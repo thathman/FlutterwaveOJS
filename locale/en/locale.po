@@ -25,11 +25,8 @@ msgstr "Flutterwave Public Key"
 msgid "plugins.paymethod.flutterwave.secretKey"
 msgstr "Flutterwave Secret Key"
 
-msgid "plugins.paymethod.flutterwave.liveMode"
-msgstr "Enable Live Mode"
-
-msgid "plugins.paymethod.flutterwave.sandboxMode"
-msgstr "Sandbox Mode"
+msgid "plugins.paymethod.flutterwave.encryptionKey"
+msgstr "Flutterwave Encryption Key"
 
 msgid "plugins.paymethod.flutterwave.instructions"
 msgstr "Instructions for making payments using Flutterwave."
@@ -64,17 +61,8 @@ msgstr "Amount"
 msgid "plugins.paymethod.flutterwave.redirecting"
 msgstr "Redirecting to Flutterwave for payment..."
 
-msgid "plugins.paymethod.flutterwave.encryptionKey"
-msgstr "Flutterwave Encryption Key"
+msgid "plugins.paymethod.flutterwave.testMode"
+msgstr "Test Mode"
 
-msgid "plugins.paymethod.flutterwave.testKeys"
-msgstr "Test API Keys"
-
-msgid "plugins.paymethod.flutterwave.testWebhook"
-msgstr "Test Webhook"
-
-msgid "plugins.paymethod.flutterwave.invalidKeys"
-msgstr "Invalid API Keys. Please check your credentials."
-
-msgid "plugins.paymethod.flutterwave.validKeys"
-msgstr "API Keys are valid!"
+msgid "plugins.paymethod.flutterwave.enableTestMode"
+msgstr "Enable Test Mode"
