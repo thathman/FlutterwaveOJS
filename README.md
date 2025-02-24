@@ -1,79 +1,103 @@
-# FlutterwaveOJS Plugin (Work In Progress)
+# 🚀 FlutterwaveOJS Plugin (Work In Progress)
 
-## Description
-The **FlutterwaveOJS Plugin** integrates **Flutterwave** with **Open Journal Systems (OJS)**, allowing journals to accept payments for **Article Processing Charges (APC)**, subscriptions, and donations.
+## 📌 Description
+The **FlutterwaveOJS Plugin** integrates **Flutterwave** with **Open Journal Systems (OJS)**, allowing journals to accept payments for:
+- **Article Processing Charges (APC)**
+- **Journal Subscriptions**
+- **Donations**
 
-> **Note:** This plugin is still a work in progress. As of now, the plugin registers successfully on OJS without errors, but the **settings form** cannot be loaded on the **Distribution > Payment** page.
+> ⚠️ **Note:** This plugin is still a work in progress. The settings form now works, but API key persistence and payment integration remain problematic.
 
-## Installation
+---
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/thathman/flutterwaveojs.git
-   ```
+## 🎯 Features
 
-2. **Install Composer Dependencies**:
-   - Navigate to the plugin directory and run:
-   ```bash
-   composer install
-   ```
+### ✅ Implemented Features
+- ✅ **Basic Plugin Registration** – The plugin successfully registers on OJS without errors.
+- ✅ **Settings Form** – The settings form now loads under **Distribution > Payment**.
+- ✅ **Basic Configuration Fields** – Admins can enter API credentials (Public Key, Secret Key, Encryption Key).
+- ✅ **Test Mode Toggle** – Users can enable/disable test mode.
 
-3. **Upload to your OJS installation**:
-   - Copy the contents of the plugin to the `plugins/paymethod` directory of your OJS installation.
+### 🏗️ Upcoming Implementations
+- 🔧 **Fix API Key Persistence** – Ensure API keys remain stored after saving and refreshing.
+- 🔧 **Proper Payment Workflow Integration** – Ensure payments link correctly to OJS orders.
+- 🔧 **Webhook Handling** – Implement webhook processing for payment confirmation.
+- 🔧 **Error Handling and Logging** – Improve debugging mechanisms for failed transactions.
 
-4. **Enable the plugin**:
-   - Go to the OJS **admin dashboard**.
-   - Navigate to **Settings > Website > Plugins** and enable **FlutterwaveOJS**.
+---
 
-## Features
+## ✅ What Works
+✔️ The plugin successfully registers on OJS.  
+✔️ The settings form now appears in **Distribution > Payment**.  
+✔️ Basic test mode toggling is available.  
 
-- **Payment Methods Supported**:
-  - Cards
-  - Bank Transfers
-  - USSD
-  - Mobile Money
-  - Multiple currencies support:
-    - USD (United States Dollar)
-    - EUR (Euro)
-    - GBP (British Pound Sterling)
-    - CAD (Canadian Dollar)
-    - AUD (Australian Dollar)
-    - NGN (Nigerian Naira)
-    - KES (Kenyan Shilling)
+---
 
-- **Live/Test Mode**:
-  - Can toggle between **Live** and **Test** modes for payment processing.
+## 🛑 Current Issues
+❌ **API Keys Do Not Persist** – When the settings form is refreshed, the keys disappear.  
+❌ **Defaults to Test Mode** – Even when unchecked, the plugin reverts to test mode.  
+❌ **No Payment Processing Yet** – The plugin does not yet properly initiate or handle payments.  
+❌ **Webhook Handling Missing** – No verification or logging of transactions.  
 
-- **Customizable Settings**:
-  - You can configure API keys, live/test mode, etc. (Settings form to be fixed).
+---
 
-## What Works
+## 🔜 What’s Next
+🔹 **Fix API Key Storage Issue** – Debug why settings are not saving correctly.  
+🔹 **Implement Payment Processing** – Develop the payment form and transaction initiation.  
+🔹 **Enable Webhook Handling** – Implement transaction verification and status updates.  
+🔹 **Improve Debugging & Error Logging** – Ensure errors are logged for troubleshooting.  
 
-- The plugin successfully registers on OJS without errors.
-- OJS recognizes the plugin and allows it to be enabled through the dashboard.
+---
 
-## What’s Not Working
+## 🚀 Future Plans
+🔹 **Subscription Support** – Enable recurring payments for journals using a subscription model.  
+🔹 **Admin Dashboard Enhancements** – Add transaction history and filtering options.  
+🔹 **Currency and Localization Support** – Allow admin selection of preferred currency.  
+🔹 **Security Hardening** – Validate webhook requests and store credentials securely.  
+🔹 **Compatibility with Future OJS Versions** – Follow best practices to ensure long-term usability.  
 
-- The **settings form** is not yet loading on the **Distribution > Payment** page.
-- Since the settings form is not functional, **payment methods** have not been tested.
+---
 
-## How You Can Help
+## 🤝 How You Can Help
+This plugin is based on references from the **official PayPal plugin** and the **Malipo plugin** from [OtCloudCompany's GitHub](https://github.com/OtCloudCompany/Malipo). However, some challenges remain.
 
-I have been using the **official PayPal plugin** and the **Malipo plugin** from [OtCloudCompany's GitHub](https://github.com/OtCloudCompany/Malipo) as references while working on this plugin. However, I need further assistance.
+If you're experienced in:
+- **OJS plugin development**
+- **Payment gateway integrations**
+- **Secure API storage**
 
-If you're familiar with **OJS plugin development**, or have experience working with **payment gateway plugins**, your assistance would be greatly appreciated.
+Your assistance would be invaluable!  
 
-## Link to Plugin on GitHub
+### 💡 How to Contribute:
+- 🔍 **Help debug and fix API key persistence issues**.
+- 🛠️ **Assist with proper payment workflow integration**.
+- 🔐 **Provide guidance on handling webhooks securely**.
+- ⚡ **Improve error handling and debugging logs**.
+- 🔄 **Ensure OJS compatibility across versions**.
 
-You can view and contribute to the plugin here:
-[https://github.com/thathman/flutterwaveojs](https://github.com/thathman/flutterwaveojs)
+📌 If you're interested in contributing, fork the repository and submit a **pull request**! 🚀
 
-## Future Plans
+---
 
-- **Fix the settings form**: This is the current roadblock that needs to be addressed for further testing.
-- **Payment method testing**: Once the form is functional, testing for payment transactions will be conducted.
-- **Full documentation**: Complete the plugin’s documentation and user guides for easier integration with OJS.
+## 🔧 Installation
 
-## Contact
+### 📥 Clone the Repository
+```bash
+git clone https://github.com/thathman/flutterwaveojs.git
+```
 
-For inquiries or collaboration, feel free to contact me at [hello@hendrix.com.ng](mailto:hello@hendrix.com.ng).
+### 📦 Install Composer Dependencies
+```bash
+composer install
+```
+
+### 📂 Upload to OJS Installation
+Copy the contents of the plugin to:
+```
+plugins/paymethod/flutterwaveojs
+```
+
+### 🏗️ Enable the Plugin in OJS
+1. Go to the **OJS Admin Dashboard**  
+2. Navigate to **Settings > Website > Plugins**  
+3. Enable **FlutterwaveOJS**  
